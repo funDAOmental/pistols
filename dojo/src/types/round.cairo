@@ -109,9 +109,9 @@ mod tests {
     #[test]
     #[available_gas(1_000_000_000)]
     fn test_round_exists() {
-        let (world, _system, _admin, _lords, _ierc20, _owner, _other, _bummer, _treasury) = tester::setup_world(true, true);
+        let sys = tester::setup_world_sys(true, true);
         // get some random inexisting round
-        let round: Round = tester::get_Round(world, 0x682137812638127638127, 1);
+        let round: Round = tester::get_Round(sys, 0x682137812638127638127, 1);
         let state: RoundState = round.state.try_into().unwrap();
         assert(state == RoundState::Null, 'RoundState::Null');
         assert(state.exists() == false, 'exists()');

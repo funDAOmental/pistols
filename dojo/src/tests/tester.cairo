@@ -24,16 +24,24 @@ mod tester {
         Wager, wager,
         Round, round,
     };
-    use pistols::models::config::{
-        Config, config,
-    };
-    use pistols::models::table::{
-        TTable, t_table,
-    };
+    use pistols::models::config::{Config, config};
+    use pistols::models::table::{TTable, t_table};
     use pistols::utils::string::{String};
 
-    // https://github.com/starkware-libs/cairo/blob/main/corelib/src/pedersen.cairo
     extern fn pedersen(a: felt252, b: felt252) -> felt252 implicits(Pedersen) nopanic;
+
+    #[derive(Copy, Drop)]
+    struct TesterSys {
+        world: IWorldDispatcher,
+        actions: IActionsDispatcher,
+        admin: IAdminDispatcher,
+        lords: ILordsMockDispatcher,
+        ierc20: IERC20Dispatcher,
+        owner: ContractAddress,
+        other: ContractAddress,
+        bummer: ContractAddress,
+        treasury: ContractAddress,
+    }
 
     //
     // starknet testing cheats
@@ -48,17 +56,7 @@ mod tester {
         (contract_address)
     }
 
-    fn setup_world(initialize: bool, approve: bool) -> (
-        IWorldDispatcher,
-        IActionsDispatcher,
-        IAdminDispatcher,
-        ILordsMockDispatcher,
-        IERC20Dispatcher,
-        ContractAddress,
-        ContractAddress,
-        ContractAddress,
-        ContractAddress,
-    ) {
+    fn setup_world_sys(initialize: bool, approve: bool) -> TesterSys {
         let mut models = array![
             duelist::TEST_CLASS_HASH,
             scoreboard::TEST_CLASS_HASH,
@@ -81,23 +79,24 @@ mod tester {
         testing::set_block_timestamp(INITIAL_TIMESTAMP);
         // systems
         let world: IWorldDispatcher = spawn_test_world(models);
-        let system = IActionsDispatcher{ contract_address: deploy_system(world, actions::TEST_CLASS_HASH) };
+        let actions = IActionsDispatcher{ contract_address: deploy_system(world, actions::TEST_CLASS_HASH) };
         let admin = IAdminDispatcher{ contract_address: deploy_system(world, admin::TEST_CLASS_HASH) };
         let lords = ILordsMockDispatcher{ contract_address: deploy_system(world, lords_mock::TEST_CLASS_HASH) };
         let ierc20 = IERC20Dispatcher{ contract_address:lords.contract_address };
+        let sys = TesterSys{ world, actions, admin, lords, ierc20, owner, other, bummer, treasury };
         // initializers
-        execute_lords_initializer(lords, owner);
-        execute_lords_faucet(lords, owner);
-        execute_lords_faucet(lords, other);
+        execute_lords_initializer(sys, owner);
+        execute_lords_faucet(sys, owner);
+        execute_lords_faucet(sys, other);
         if (initialize) {
-            execute_admin_initialize(admin, owner, owner, treasury, lords.contract_address);
+            execute_admin_initialize(sys, owner, owner, treasury, lords.contract_address);
         }
         if (approve) {
-            execute_lords_approve(lords, owner, system.contract_address, 1_000_000 * constants::ETH_TO_WEI);
-            execute_lords_approve(lords, other, system.contract_address, 1_000_000 * constants::ETH_TO_WEI);
-            execute_lords_approve(lords, bummer, system.contract_address, 1_000_000 * constants::ETH_TO_WEI);
+            execute_lords_approve(sys, owner, actions.contract_address, 1_000_000 * constants::ETH_TO_WEI);
+            execute_lords_approve(sys, other, actions.contract_address, 1_000_000 * constants::ETH_TO_WEI);
+            execute_lords_approve(sys, bummer, actions.contract_address, 1_000_000 * constants::ETH_TO_WEI);
         }
-        (world, system, admin, lords, ierc20, owner, other, bummer, treasury)
+        (sys)
     }
 
     fn elapse_timestamp(delta: u64) -> (u64, u64) {
@@ -131,61 +130,61 @@ mod tester {
     //
 
     // ::admin
-    fn execute_admin_initialize(system: IAdminDispatcher, sender: ContractAddress, owner_address: ContractAddress, treasury_address: ContractAddress, lords_address: ContractAddress) {
+    fn execute_admin_initialize(sys: TesterSys, sender: ContractAddress, owner_address: ContractAddress, treasury_address: ContractAddress, lords_address: ContractAddress) {
         testing::set_contract_address(sender);
-        system.initialize(owner_address, treasury_address, lords_address);
+        sys.admin.initialize(owner_address, treasury_address, lords_address);
         _next_block();
     }
-    fn execute_admin_set_owner(system: IAdminDispatcher, sender: ContractAddress, owner_address: ContractAddress) {
+    fn execute_admin_set_owner(sys: TesterSys, sender: ContractAddress, owner_address: ContractAddress) {
         testing::set_contract_address(sender);
-        system.set_owner(owner_address);
+        sys.admin.set_owner(owner_address);
         _next_block();
     }
-    fn execute_admin_set_treasury(system: IAdminDispatcher, sender: ContractAddress, treasury_address: ContractAddress) {
+    fn execute_admin_set_treasury(sys: TesterSys, sender: ContractAddress, treasury_address: ContractAddress) {
         testing::set_contract_address(sender);
-        system.set_treasury(treasury_address);
+        sys.admin.set_treasury(treasury_address);
         _next_block();
     }
-    fn execute_admin_set_paused(system: IAdminDispatcher, sender: ContractAddress, paused: bool) {
+    fn execute_admin_set_paused(sys: TesterSys, sender: ContractAddress, paused: bool) {
         testing::set_contract_address(sender);
-        system.set_paused(paused);
+        sys.admin.set_paused(paused);
         _next_block();
     }
-    fn execute_admin_set_table(system: IAdminDispatcher, sender: ContractAddress, table_id: felt252, contract_address: ContractAddress, description: felt252, fee_min: u256, fee_pct: u8, enabled: bool) {
+    fn execute_admin_set_table(sys: TesterSys, sender: ContractAddress, table_id: felt252, contract_address: ContractAddress, description: felt252, fee_min: u256, fee_pct: u8, enabled: bool) {
         testing::set_contract_address(sender);
-        system.set_table(table_id, contract_address, description, fee_min, fee_pct, enabled);
+        sys.admin.set_table(table_id, contract_address, description, fee_min, fee_pct, enabled);
         _next_block();
     }
-    fn execute_admin_enable_table(system: IAdminDispatcher, sender: ContractAddress, table_id: felt252, enabled: bool) {
+    fn execute_admin_enable_table(sys: TesterSys, sender: ContractAddress, table_id: felt252, enabled: bool) {
         testing::set_contract_address(sender);
-        system.enable_table(table_id, enabled);
+        sys.admin.enable_table(table_id, enabled);
         _next_block();
     }
 
     // ::ierc20
-    fn execute_lords_initializer(system: ILordsMockDispatcher, sender: ContractAddress) {
+    fn execute_lords_initializer(sys: TesterSys, sender: ContractAddress) {
         testing::set_contract_address(sender);
-        system.initializer();
+        sys.lords.initializer();
         _next_block();
     }
-    fn execute_lords_faucet(system: ILordsMockDispatcher, sender: ContractAddress) {
+    fn execute_lords_faucet(sys: TesterSys, sender: ContractAddress) {
         testing::set_contract_address(sender);
-        system.faucet();
+        sys.lords.faucet();
         _next_block();
     }
-    fn execute_lords_approve(system: ILordsMockDispatcher, owner: ContractAddress, spender: ContractAddress, value: u256) {
-        testing::set_contract_address(owner);
-        system.approve(spender, value);
+    fn execute_lords_approve(sys: TesterSys, owner: ContractAddress, spender: ContractAddress, value: u256) {
+        testing::set_contract_address(sys.owner);
+        sys.lords.approve(spender, value);
         _next_block();
     }
 
     // ::actions
-    fn execute_register_duelist(system: IActionsDispatcher, sender: ContractAddress, name: felt252, profile_pic: u8) {
+    fn execute_register_duelist(sys: TesterSys, sender: ContractAddress, name: felt252, profile_pic: u8) {
         testing::set_contract_address(sender);
-        system.register_duelist(name, profile_pic);
+        sys.actions.register_duelist(name, profile_pic);
         _next_block();
     }
-    fn execute_create_challenge(system: IActionsDispatcher, sender: ContractAddress,
+    fn execute_create_challenge(sys: TesterSys, sender: ContractAddress,
         challenged: ContractAddress,
         message: felt252,
         table_id: felt252,
@@ -193,29 +192,29 @@ mod tester {
         expire_seconds: u64,
     ) -> u128 {
         testing::set_contract_address(sender);
-        let duel_id: u128 = system.create_challenge(challenged, message, table_id, wager_value, expire_seconds);
+        let duel_id: u128 = sys.actions.create_challenge(challenged, message, table_id, wager_value, expire_seconds);
         _next_block();
         (duel_id)
     }
-    fn execute_reply_challenge(system: IActionsDispatcher, sender: ContractAddress,
+    fn execute_reply_challenge(sys: TesterSys, sender: ContractAddress,
         duel_id: u128,
         accepted: bool,
     ) -> ChallengeState {
         testing::set_contract_address(sender);
-        let new_state: ChallengeState = system.reply_challenge(duel_id, accepted);
+        let new_state: ChallengeState = sys.actions.reply_challenge(duel_id, accepted);
         _next_block();
         (new_state)
     }
-    fn execute_commit_action(system: IActionsDispatcher, sender: ContractAddress,
+    fn execute_commit_action(sys: TesterSys, sender: ContractAddress,
         duel_id: u128,
         round_number: u8,
         hash: u64,
     ) {
         testing::set_contract_address(sender);
-        system.commit_action(duel_id, round_number, hash);
+        sys.actions.commit_action(duel_id, round_number, hash);
         _next_block();
     }
-    fn execute_reveal_action(system: IActionsDispatcher, sender: ContractAddress,
+    fn execute_reveal_action(sys: TesterSys, sender: ContractAddress,
         duel_id: u128,
         round_number: u8,
         salt: u64,
@@ -223,7 +222,7 @@ mod tester {
         slot2: u8,
     ) {
         testing::set_contract_address(sender);
-        system.reveal_action(duel_id, round_number, salt, slot1, slot2);
+        sys.actions.reveal_action(duel_id, round_number, salt, slot1, slot2);
         _next_block();
     }
 
@@ -232,7 +231,7 @@ mod tester {
     //
 
     // fn execute_get_pact(system: IActionsDispatcher, a: ContractAddress, b: ContractAddress) -> u128 {
-    //     let result: u128 = system.get_pact(a, b);
+    //     let result: u128 = sys.actions.get_pact(a, b);
     //     (result)
     // }
 
@@ -241,41 +240,41 @@ mod tester {
     //
 
     #[inline(always)]
-    fn get_Config(world: IWorldDispatcher) -> Config {
-        (get!(world, 1, Config))
+    fn get_Config(sys: TesterSys) -> Config {
+        (get!(sys.world, 1, Config))
     }
     #[inline(always)]
-    fn get_Table(world: IWorldDispatcher, table_id: felt252) -> TTable {
-        (get!(world, table_id, TTable))
+    fn get_Table(sys: TesterSys, table_id: felt252) -> TTable {
+        (get!(sys.world, table_id, TTable))
     }
     #[inline(always)]
-    fn get_Duelist(world: IWorldDispatcher, address: ContractAddress) -> Duelist {
-        (get!(world, address, Duelist))
+    fn get_Duelist(sys: TesterSys, address: ContractAddress) -> Duelist {
+        (get!(sys.world, address, Duelist))
     }
     #[inline(always)]
-    fn get_Scoreboard(world: IWorldDispatcher, address: ContractAddress, table: felt252) -> Scoreboard {
-        (get!(world, (address, table), Scoreboard))
+    fn get_Scoreboard(sys: TesterSys, address: ContractAddress, table: felt252) -> Scoreboard {
+        (get!(sys.world, (address, table), Scoreboard))
     }
     #[inline(always)]
-    fn get_Challenge(world: IWorldDispatcher, duel_id: u128) -> Challenge {
-        (get!(world, duel_id, Challenge))
+    fn get_Challenge(sys: TesterSys, duel_id: u128) -> Challenge {
+        (get!(sys.world, duel_id, Challenge))
     }
     #[inline(always)]
-    fn get_Snapshot(world: IWorldDispatcher, duel_id: u128) -> Snapshot {
-        (get!(world, duel_id, Snapshot))
+    fn get_Snapshot(sys: TesterSys, duel_id: u128) -> Snapshot {
+        (get!(sys.world, duel_id, Snapshot))
     }
     #[inline(always)]
-    fn get_Wager(world: IWorldDispatcher, duel_id: u128) -> Wager {
-        (get!(world, duel_id, Wager))
+    fn get_Wager(sys: TesterSys, duel_id: u128) -> Wager {
+        (get!(sys.world, duel_id, Wager))
     }
     #[inline(always)]
-    fn get_Round(world: IWorldDispatcher, duel_id: u128, round_number: u8) -> Round {
-        (get!(world, (duel_id, round_number), Round))
+    fn get_Round(sys: TesterSys, duel_id: u128, round_number: u8) -> Round {
+        (get!(sys.world, (duel_id, round_number), Round))
     }
     #[inline(always)]
-    fn get_Challenge_Round(world: IWorldDispatcher, duel_id: u128) -> (Challenge, Round) {
-        let challenge = get!(world, duel_id, Challenge);
-        let round = get!(world, (duel_id, challenge.round_number), Round);
+    fn get_Challenge_Round(sys: TesterSys, duel_id: u128) -> (Challenge, Round) {
+        let challenge = get!(sys.world, duel_id, Challenge);
+        let round = get!(sys.world, (duel_id, challenge.round_number), Round);
         (challenge, round)
     }
 
@@ -283,8 +282,8 @@ mod tester {
     // Asserts
     //
 
-    fn assert_balance(ierc20: IERC20Dispatcher, address: ContractAddress, balance_before: u256, subtract: u256, add: u256, prefix: felt252) -> u256 {
-        let balance: u256 = ierc20.balance_of(address);
+    fn assert_balance(sys: TesterSys, address: ContractAddress, balance_before: u256, subtract: u256, add: u256, prefix: felt252) -> u256 {
+        let balance: u256 = sys.ierc20.balance_of(address);
         if (subtract > add) {
             assert(balance < balance_before, String::concat(prefix, ' <'));
         } else if (add > subtract) {
@@ -296,7 +295,7 @@ mod tester {
         (balance)
     }
 
-    fn assert_winner_balance(ierc20: IERC20Dispatcher,
+    fn assert_winner_balance(sys: TesterSys,
         winner: u8,
         duelist_a: ContractAddress, duelist_b: ContractAddress,
         balance_a: u256, balance_b: u256,
@@ -304,14 +303,14 @@ mod tester {
         prefix: felt252,
     ) {
         if (winner == 1) {
-            assert_balance(ierc20, duelist_a, balance_a, fee, wager_value, String::concat('A_A_', prefix));
-            assert_balance(ierc20, duelist_b, balance_b, fee + wager_value, 0, String::concat('A_B_', prefix));
+            assert_balance(sys, duelist_a, balance_a, fee, wager_value, String::concat('A_A_', prefix));
+            assert_balance(sys, duelist_b, balance_b, fee + wager_value, 0, String::concat('A_B_', prefix));
         } else if (winner == 2) {
-            assert_balance(ierc20, duelist_a, balance_a, fee + wager_value, 0, String::concat('B_A_', prefix));
-            assert_balance(ierc20, duelist_b, balance_b, fee, wager_value, String::concat('B_B_', prefix));
+            assert_balance(sys, duelist_a, balance_a, fee + wager_value, 0, String::concat('B_A_', prefix));
+            assert_balance(sys, duelist_b, balance_b, fee, wager_value, String::concat('B_B_', prefix));
         } else {
-            assert_balance(ierc20, duelist_a, balance_a, fee, 0, String::concat('D_A_', prefix));
-            assert_balance(ierc20, duelist_b, balance_b, fee, 0, String::concat('D_B_', prefix));
+            assert_balance(sys, duelist_a, balance_a, fee, 0, String::concat('D_A_', prefix));
+            assert_balance(sys, duelist_b, balance_b, fee, 0, String::concat('D_B_', prefix));
         }
     }
 

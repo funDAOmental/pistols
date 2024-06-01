@@ -23,17 +23,17 @@ mod tests {
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Challenger not registered','ENTRYPOINT_FAILED'))]
     fn test_invalid_challenger() {
-        let (_world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        let _duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, 0);
+        let sys = tester::setup_world_sys(true, true);
+        let _duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, 0);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Challenging thyself, you fool!','ENTRYPOINT_FAILED'))]
     fn test_challenge_thyself() {
-        let (_world, system, _admin, _lords, _ierc20, owner, _other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
-        let _duel_id: u128 = tester::execute_create_challenge(system, owner, owner, MESSAGE_1, TABLE_ID, 0, 0);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
+        let _duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.owner, MESSAGE_1, TABLE_ID, 0, 0);
     }
 
     #[test]
@@ -41,55 +41,55 @@ mod tests {
     #[should_panic(expected:('Missing challenged address','ENTRYPOINT_FAILED'))]
     // #[should_panic(expected:('Challenge a player','ENTRYPOINT_FAILED'))]
     fn test_invalid_code() {
-        let (_world, system, _admin, _lords, _ierc20, owner, _other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
         let challenged_1 = zero_address();
-        let _duel_id: u128 = tester::execute_create_challenge(system, owner, challenged_1, MESSAGE_1, TABLE_ID, 0, 0);
+        let _duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, challenged_1, MESSAGE_1, TABLE_ID, 0, 0);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Duplicated challenge','ENTRYPOINT_FAILED'))]
     fn test_duplicated_challenge() {
-        let (_world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
-        tester::execute_register_duelist(system, other, OTHER_NAME, 1);
-        tester::execute_create_challenge(system, owner, other, MESSAGE_1,TABLE_ID, 0, 0);
-        tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, 0);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
+        tester::execute_register_duelist(sys, sys.other, OTHER_NAME, 1);
+        tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1,TABLE_ID, 0, 0);
+        tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, 0);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Duplicated challenge','ENTRYPOINT_FAILED'))]
     fn test_duplicated_challenge_from_challenged() {
-        let (_world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
-        tester::execute_register_duelist(system, other, OTHER_NAME, 1);
-        tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, 0);
-        tester::execute_create_challenge(system, other, owner, MESSAGE_1, TABLE_ID, 0, 0);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
+        tester::execute_register_duelist(sys, sys.other, OTHER_NAME, 1);
+        tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, 0);
+        tester::execute_create_challenge(sys, sys.other, sys.owner, MESSAGE_1, TABLE_ID, 0, 0);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Invalid expire_seconds','ENTRYPOINT_FAILED'))]
     fn test_invalid_expire() {
-        let (_world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
         let expire_seconds: u64 = 60 * 60 - 1;
-        let _duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let _duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     fn test_challenge_address() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
         let timestamp = tester::get_block_timestamp();
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, 0);
-        let ch = tester::get_Challenge(world, duel_id);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, 0);
+        let ch = tester::get_Challenge(sys, duel_id);
         assert(ch.state == ChallengeState::Awaiting.into(), 'state');
-        assert(ch.duelist_a == owner, 'challenged');
-        assert(ch.duelist_b == other, 'challenged');
+        assert(ch.duelist_a == sys.owner, 'challenged');
+        assert(ch.duelist_b == sys.other, 'challenged');
         assert(ch.message == MESSAGE_1, 'message');
         assert(ch.timestamp_start == timestamp, 'timestamp_start');
         assert(ch.timestamp_end == 0, 'timestamp_end');
@@ -98,12 +98,12 @@ mod tests {
     #[test]
     #[available_gas(1_000_000_000)]
     fn test_challenge_expire_ok() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
         let expire_seconds: u64 = 24 * 60 * 60;
         let timestamp = tester::get_block_timestamp();
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
-        let ch = tester::get_Challenge(world, duel_id);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let ch = tester::get_Challenge(sys, duel_id);
         assert(ch.timestamp_start == timestamp, 'timestamp_start');
         assert(ch.timestamp_end == ch.timestamp_start + expire_seconds, 'timestamp_end');
     }
@@ -111,17 +111,17 @@ mod tests {
     #[test]
     #[available_gas(1_000_000_000)]
     fn test_challenge_address_pact() {
-        let (_world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
-        assert(system.get_pact(owner, other) == 0, 'get_pact_0_1');
-        assert(system.get_pact(other, owner) == 0, 'get_pact_0_2');
-        assert(system.has_pact(owner, other) == false, 'has_pact_0_1');
-        assert(system.has_pact(other, owner) == false, 'has_pact_0_2');
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, 0);
-        assert(system.get_pact(owner, other) == duel_id, 'get_pact_1_1');
-        assert(system.get_pact(other, owner) == duel_id, 'get_pact_1_2');
-        assert(system.has_pact(owner, other) == true, 'has_pact_1_1');
-        assert(system.has_pact(other, owner) == true, 'has_pact_1_2');
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
+        assert(sys.actions.get_pact(sys.owner, sys.other) == 0, 'get_pact_0_1');
+        assert(sys.actions.get_pact(sys.other, sys.owner) == 0, 'get_pact_0_2');
+        assert(sys.actions.has_pact(sys.owner, sys.other) == false, 'has_pact_0_1');
+        assert(sys.actions.has_pact(sys.other, sys.owner) == false, 'has_pact_0_2');
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, 0);
+        assert(sys.actions.get_pact(sys.owner, sys.other) == duel_id, 'get_pact_1_1');
+        assert(sys.actions.get_pact(sys.other, sys.owner) == duel_id, 'get_pact_1_2');
+        assert(sys.actions.has_pact(sys.owner, sys.other) == true, 'has_pact_1_1');
+        assert(sys.actions.has_pact(sys.other, sys.owner) == true, 'has_pact_1_2');
     }
 
 
@@ -133,49 +133,49 @@ mod tests {
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Challenge do not exist','ENTRYPOINT_FAILED'))]
     fn test_challenge_reply_invalid() {
-        let (_world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
 
         let expire_seconds: u64 = timestamp::from_days(2);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
         tester::elapse_timestamp(timestamp::from_days(1));
-        tester::execute_reply_challenge(system, owner, duel_id + 1, true);
+        tester::execute_reply_challenge(sys, sys.owner, duel_id + 1, true);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Challenge is not Awaiting','ENTRYPOINT_FAILED'))]
     fn test_challenge_reply_twice() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
 
         let expire_seconds: u64 = timestamp::from_days(2);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
-        let _ch = tester::get_Challenge(world, duel_id);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let _ch = tester::get_Challenge(sys, duel_id);
         let (_block_number, _timestamp) = tester::elapse_timestamp(timestamp::from_days(3));
-        let new_state: ChallengeState = tester::execute_reply_challenge(system, other, duel_id, false);
+        let new_state: ChallengeState = tester::execute_reply_challenge(sys, sys.other, duel_id, false);
         assert(new_state != ChallengeState::Awaiting, '!awaiting');
         
-        tester::execute_reply_challenge(system, other, duel_id, true);
+        tester::execute_reply_challenge(sys, sys.other, duel_id, true);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     fn test_challenge_reply_expired() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
 
         let expire_seconds: u64 = timestamp::from_days(1);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
-        let _ch = tester::get_Challenge(world, duel_id);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let _ch = tester::get_Challenge(sys, duel_id);
 
-        assert(system.has_pact(other, owner) == true, 'has_pact_yes');
+        assert(sys.actions.has_pact(sys.other, sys.owner) == true, 'has_pact_yes');
         let (_block_number, timestamp) = tester::elapse_timestamp(timestamp::from_date(1, 0, 1));
-        let new_state: ChallengeState = tester::execute_reply_challenge(system, owner, duel_id, true);
+        let new_state: ChallengeState = tester::execute_reply_challenge(sys, sys.owner, duel_id, true);
         assert(new_state == ChallengeState::Expired, 'expired');
-        assert(system.has_pact(other, owner) == false, 'has_pact_no');
+        assert(sys.actions.has_pact(sys.other, sys.owner) == false, 'has_pact_no');
 
-        let ch = tester::get_Challenge(world, duel_id);
+        let ch = tester::get_Challenge(sys, duel_id);
         assert(ch.state == new_state.into(), 'state');
         assert(ch.round_number == 0, 'round_number');
         assert(ch.winner == 0, 'winner');
@@ -187,34 +187,34 @@ mod tests {
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Cannot accept own challenge','ENTRYPOINT_FAILED'))]
     fn test_challenge_owner_accept() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
 
         let expire_seconds: u64 = timestamp::from_days(2);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
-        let _ch = tester::get_Challenge(world, duel_id);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let _ch = tester::get_Challenge(sys, duel_id);
 
         tester::elapse_timestamp(timestamp::from_days(1));
-        tester::execute_reply_challenge(system, owner, duel_id, true);
+        tester::execute_reply_challenge(sys, sys.owner, duel_id, true);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     fn test_challenge_owner_cancel() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
 
         let expire_seconds: u64 = timestamp::from_days(2);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
-        let _ch = tester::get_Challenge(world, duel_id);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let _ch = tester::get_Challenge(sys, duel_id);
         let (_block_number, timestamp) = tester::elapse_timestamp(timestamp::from_days(1));
 
-        assert(system.has_pact(other, owner) == true, 'has_pact_yes');
-        let new_state: ChallengeState = tester::execute_reply_challenge(system, owner, duel_id, false);
+        assert(sys.actions.has_pact(sys.other, sys.owner) == true, 'has_pact_yes');
+        let new_state: ChallengeState = tester::execute_reply_challenge(sys, sys.owner, duel_id, false);
         assert(new_state == ChallengeState::Withdrawn, 'canceled');
-        assert(system.has_pact(owner, other) == false, 'has_pact_no');
+        assert(sys.actions.has_pact(sys.owner, sys.other) == false, 'has_pact_no');
 
-        let ch = tester::get_Challenge(world, duel_id);
+        let ch = tester::get_Challenge(sys, duel_id);
         assert(ch.state == new_state.into(), 'state');
         assert(ch.round_number == 0, 'round_number');
         assert(ch.winner == 0, 'winner');
@@ -226,49 +226,48 @@ mod tests {
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Not the Challenged','ENTRYPOINT_FAILED'))]
     fn test_challenge_impersonator() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
+        let sys = tester::setup_world_sys(true, true);
         let impersonator: ContractAddress = starknet::contract_address_const::<0x333>();
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
-        tester::execute_register_duelist(system, other, OTHER_NAME, 2);
-        tester::execute_register_duelist(system, impersonator, 'Impersonator', 3);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
+        tester::execute_register_duelist(sys, sys.other, OTHER_NAME, 2);
+        tester::execute_register_duelist(sys, impersonator, 'Impersonator', 3);
 
         let expire_seconds: u64 = timestamp::from_days(2);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
-        let _ch = tester::get_Challenge(world, duel_id);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let _ch = tester::get_Challenge(sys, duel_id);
         let (_block_number, _timestamp) = tester::elapse_timestamp(timestamp::from_days(1));
-        tester::execute_reply_challenge(system, impersonator, duel_id, false);
+        tester::execute_reply_challenge(sys, impersonator, duel_id, false);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     #[should_panic(expected:('Challenged not registered','ENTRYPOINT_FAILED'))]
     fn test_challenge_other_not_registered() {
-        let (_world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
-
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
         let expire_seconds: u64 = timestamp::from_days(2);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
         tester::elapse_timestamp(timestamp::from_days(1));
-        tester::execute_reply_challenge(system, other, duel_id, true);
+        tester::execute_reply_challenge(sys, sys.other, duel_id, true);
     }
 
     #[test]
     #[available_gas(1_000_000_000)]
     fn test_challenge_other_refuse() {
-        let (world, system, _admin, _lords, _ierc20, owner, other, _bummer, _treasury) = tester::setup_world(true, true);
-        tester::execute_register_duelist(system, owner, PLAYER_NAME, 1);
-        tester::execute_register_duelist(system, other, OTHER_NAME, 2);
+        let sys = tester::setup_world_sys(true, true);
+        tester::execute_register_duelist(sys, sys.owner, PLAYER_NAME, 1);
+        tester::execute_register_duelist(sys, sys.other, OTHER_NAME, 2);
 
         let expire_seconds: u64 = timestamp::from_days(2);
-        let duel_id: u128 = tester::execute_create_challenge(system, owner, other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
+        let duel_id: u128 = tester::execute_create_challenge(sys, sys.owner, sys.other, MESSAGE_1, TABLE_ID, 0, expire_seconds);
 
-        assert(system.has_pact(other, owner) == true, 'has_pact_yes');
+        assert(sys.actions.has_pact(sys.other, sys.owner) == true, 'has_pact_yes');
         let (_block_number, timestamp) = tester::elapse_timestamp(timestamp::from_days(1));
-        let new_state: ChallengeState = tester::execute_reply_challenge(system, other, duel_id, false);
+        let new_state: ChallengeState = tester::execute_reply_challenge(sys, sys.other, duel_id, false);
         assert(new_state == ChallengeState::Refused, 'refused');
-        assert(system.has_pact(other, owner) == false, 'has_pact_no');
+        assert(sys.actions.has_pact(sys.other, sys.owner) == false, 'has_pact_no');
 
-        let ch = tester::get_Challenge(world, duel_id);
+        let ch = tester::get_Challenge(sys, duel_id);
         assert(ch.state == new_state.into(), 'state');
         assert(ch.round_number == 0, 'round_number');
         assert(ch.winner == 0, 'winner');

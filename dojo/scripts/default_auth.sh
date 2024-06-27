@@ -32,7 +32,7 @@ export LORDS_MOCK=
 export LORDS_ADDRESS=$(toml get Scarb.toml --raw profile.$PROFILE.tool.dojo.env.lords_address)
 if [[ -z "$LORDS_ADDRESS" ]]; then
   echo "- using mock \$LORDS 👑"
-  export LORDS_ADDRESS=$(cat $MANIFEST_FILE_PATH | jq -r '.contracts[] | select(.name == "pistols::mocks::lords_mock::lords_mock" ).address')
+  export LORDS_ADDRESS=$(cat $MANIFEST_FILE_PATH | jq -r '.contracts[] | select(.name == "pistols::mocks::lords_mock::lords_mock_v2" ).address')
   export LORDS_MOCK="Yes"
 fi
 

@@ -10,7 +10,7 @@ export const useLordsContract = () => {
   const { selectedChainConfig } = useStarknetContext()
   const lordsAddress = useMemo(() => (selectedChainConfig.lordsContractAddress), [selectedChainConfig])
 
-  const { contractAddress: mockAddress, isDeployed, abi } = useDojoSystem('lords_mock')
+  const { contractAddress: mockAddress, isDeployed, abi } = useDojoSystem('lords_mock_v2')
   const isMock = !lordsAddress && isDeployed
 
   return {

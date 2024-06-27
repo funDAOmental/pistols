@@ -51,4 +51,10 @@ mod tests {
 
 mod mocks {
     mod lords_mock;
+    mod erc20_allowance;
+    mod erc20_balance;
+    mod erc20_bridgeable;
+    mod erc20_burnable;
+    mod erc20_metadata;
+    mod erc20_mintable;
 }

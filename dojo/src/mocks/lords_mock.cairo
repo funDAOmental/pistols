@@ -59,7 +59,7 @@ trait ILordsMockFaucet<TState> {
 }
 
 #[dojo::contract(allow_ref_self)]
-mod lords_mock {
+mod lords_mock_v2 {
     use integer::BoundedInt;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
@@ -69,11 +69,16 @@ mod lords_mock {
 
     use token::components::security::initializable::initializable_component;
 
-    use token::components::token::erc20::erc20_metadata::erc20_metadata_component;
-    use token::components::token::erc20::erc20_balance::erc20_balance_component;
-    use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
-    use token::components::token::erc20::erc20_mintable::erc20_mintable_component;
-    use token::components::token::erc20::erc20_burnable::erc20_burnable_component;
+    // use token::components::token::erc20::erc20_metadata::erc20_metadata_component;
+    // use token::components::token::erc20::erc20_balance::erc20_balance_component;
+    // use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
+    // use token::components::token::erc20::erc20_mintable::erc20_mintable_component;
+    // use token::components::token::erc20::erc20_burnable::erc20_burnable_component;
+    use pistols::mocks::erc20_metadata::erc20_metadata_component;
+    use pistols::mocks::erc20_balance::erc20_balance_component;
+    use pistols::mocks::erc20_allowance::erc20_allowance_component;
+    use pistols::mocks::erc20_mintable::erc20_mintable_component;
+    use pistols::mocks::erc20_burnable::erc20_burnable_component;
 
     component!(path: initializable_component, storage: initializable, event: InitializableEvent);
     component!(path: erc20_metadata_component, storage: erc20_metadata, event: ERC20MetadataEvent);
@@ -133,7 +138,7 @@ mod lords_mock {
     impl ERC20BalanceCamelImpl = erc20_balance_component::ERC20BalanceCamelImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC20AllowanceImpl = erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
+    impl ERC20AllowanceImpl = erc20_allowance_component::ERC20AllowanceImpl<ContractState>; 
 
     //
     // Internal Impls

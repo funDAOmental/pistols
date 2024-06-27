@@ -11,7 +11,7 @@ mod tester {
     use pistols::interfaces::ierc20::{ierc20, IERC20Dispatcher, IERC20DispatcherTrait};
     use pistols::systems::admin::{admin, IAdminDispatcher, IAdminDispatcherTrait};
     use pistols::systems::actions::{actions, IActionsDispatcher, IActionsDispatcherTrait};
-    use pistols::mocks::lords_mock::{lords_mock, ILordsMockDispatcher, ILordsMockDispatcherTrait};
+    use pistols::mocks::lords_mock::{lords_mock_v2, ILordsMockDispatcher, ILordsMockDispatcherTrait};
     use pistols::types::challenge::{ChallengeState};
     use pistols::types::constants::{constants};
     use pistols::types::action::{Action};
@@ -82,7 +82,7 @@ mod tester {
         let world: IWorldDispatcher = spawn_test_world(models);
         let system = IActionsDispatcher{ contract_address: deploy_system(world, 'salt', actions::TEST_CLASS_HASH) };
         let admin = IAdminDispatcher{ contract_address: deploy_system(world, 'admin', admin::TEST_CLASS_HASH) };
-        let lords = ILordsMockDispatcher{ contract_address: deploy_system(world, 'lords_mock', lords_mock::TEST_CLASS_HASH) };
+        let lords = ILordsMockDispatcher{ contract_address: deploy_system(world, 'lords_mock_v2', lords_mock::TEST_CLASS_HASH) };
         let ierc20 = IERC20Dispatcher{ contract_address:lords.contract_address };
         // initializers
         execute_lords_initializer(lords, owner);

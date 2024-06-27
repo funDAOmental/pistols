@@ -2,7 +2,7 @@
   "world": {
     "kind": "WorldContract",
     "class_hash": "0x3f63cecdc4964acafb921ba2934c6507d1b3c344edb64c2762cf08053169ab9",
-    "original_class_hash": "0x3f63cecdc4964acafb921ba2934c6507d1b3c344edb64c2762cf08053169ab9",
+    "original_class_hash": "0xf6f44afb3cacbcc01a371aff62c86ca9a45feba065424c99f7cd8637514d8f",
     "abi": [
       {
         "type": "impl",
@@ -999,7 +999,7 @@
         ]
       }
     ],
-    "address": "0x545c8aff15426c3d43b3ba8fd45c61870b30ca4ec0bfbd69193facee4c7b97c",
+    "address": "0x509c209fc7c9ad157b463a1b48d92a399239bce020392ab2a920e7f2af31bb5",
     "transaction_hash": "0x77f2c4502600238cf24566a5625c046e0cf8285a24a1f925d75c05fc02d1a54",
     "block_number": 596,
     "seed": "pistols",
@@ -1019,7 +1019,7 @@
   "contracts": [
     {
       "kind": "DojoContract",
-      "address": "0x6e7caa0a4efeba08f9022eaa877292d33fd911d40ec151582fa46fe561fdf1",
+      "address": "0xde77c78f35b39f081eca10228d65e4e5cbc827ed6f1db30539e90e7420900c",
       "class_hash": "0x231b1f0e1dab25cc5070ff1cea5448b469584e21557ad98a4838ee0529a53c5",
       "original_class_hash": "0x231b1f0e1dab25cc5070ff1cea5448b469584e21557ad98a4838ee0529a53c5",
       "base_class_hash": "0x22f3e55b61d86c2ac5239fa3b3b8761f26b9a5c0b5f61ddbd5d756ced498b46",
@@ -1640,7 +1640,7 @@
     },
     {
       "kind": "DojoContract",
-      "address": "0x30663cb812dc7e2930b9683945132ca6054483af40e1e7daccb77091e02e7b1",
+      "address": "0x34bbde433b8d8cb45ce22d801f4d65a5dcb77b0ef8396d0b5cdc20fc71a1c73",
       "class_hash": "0x6a5d4e1f6476f18b7f5862d36b71cd3289761fe81405a54f5f96b679a45b3a7",
       "original_class_hash": "0x6a5d4e1f6476f18b7f5862d36b71cd3289761fe81405a54f5f96b679a45b3a7",
       "base_class_hash": "0x22f3e55b61d86c2ac5239fa3b3b8761f26b9a5c0b5f61ddbd5d756ced498b46",
@@ -2396,7 +2396,7 @@
     },
     {
       "kind": "DojoContract",
-      "address": "0x725717f8ac5508bb1b6dfbf53949f20b7f38f59c7310feab688cb5f18ef0635",
+      "address": "0x225f690595a067273bdf36583ea9dd91ae2f2fbc78ee2f7480dfcf6b75ba01a",
       "class_hash": "0x6103e99c5ede4c34affd0379761dd4c5beb690d2c51a774ac2b9fa93d0fb079",
       "original_class_hash": "0x6103e99c5ede4c34affd0379761dd4c5beb690d2c51a774ac2b9fa93d0fb079",
       "base_class_hash": "0x22f3e55b61d86c2ac5239fa3b3b8761f26b9a5c0b5f61ddbd5d756ced498b46",
